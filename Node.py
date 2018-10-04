@@ -1,9 +1,9 @@
 
 
 class Node(object):
-    def __init__(self,name,parents):
+    def __init__(self,name):
         self.name = name
-        self.parents = parents
+        self.parents = []
         self.children = []
         self.CPT = {}
 
