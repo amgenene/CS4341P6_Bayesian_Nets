@@ -6,6 +6,7 @@ class Node(object):
         self.parents = []
         self.children = []
         self.CPT = []
+        self.query_list = []
         self.status = None
 
 

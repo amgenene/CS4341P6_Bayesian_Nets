@@ -77,6 +77,7 @@ def assign_node_state(state_file_name,all_nodes):
     sorted_node_name_list = sorted(all_nodes)
     for s in range(len(sorted_node_name_list)):
         all_nodes[sorted_node_name_list[s]].status = a[s]
+        all_nodes[sorted_node_name_list[s]].query_list.append(a)
         list_of_nodes.append(all_nodes[sorted_node_name_list[s]])
     return list_of_nodes
 
@@ -100,10 +101,6 @@ def sampling_comparisons(rand_list, node):
 def rejection_sampling(list_compared, node):
     true_index = []
     false_index = []
-    counter = 0
-    true_satisfied = 0
-    false_satisfied = 0
-    query_satisfied = 0
     possible_satisfied = []
     distances_between_tru = []
     distances_between_false = []
@@ -124,16 +121,24 @@ def rejection_sampling(list_compared, node):
     for d in range(0, len(false_index) - 1):
         distances_between_false.append(abs(false_index[d] - false_index[d+1]))
     for j in range(0, len(list_compared)):
-
         for k in true_index:
             if j % k == 0 and list_compared[j] == 't':
                 possible_satisfied.append(list_compared[j])
         for l in false_index:
             if j % l == 0 and list_compared[j] == 'f':
                 possible_satisfied.append((list_compared[j]))
-    print(len(list_compared))
-    print(len(possible_satisfied))
-
+    for d in range(0, len(possible_satisfied)):
+        for e in range(0, len(node[0].query_list)):
+            if node[0].query_list[e] == 't' and possible_satisfied[d] == 'f':
+                continue
+            elif node[0].query_list[e] == 'f' and possible_satisfied[d] == 't':
+                continue
+            elif node[0].query_list[e] == 'f' and possible_satisfied[d] == 'f':
+                list_accepted_sample.append(possible_satisfied[d])
+            elif node[0].query_list[e] == 't' and possible_satisfied[d] == 't':
+                list_accepted_sample.append(possible_satisfied[d])
+            elif node[0].query_list[e] == '-' or e == '?':
+                list_accepted_sample.append(possible_satisfied[d])
     return list_accepted_sample
     pass
 
