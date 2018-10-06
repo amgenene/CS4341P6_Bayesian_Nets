@@ -6,6 +6,7 @@ You will need a way to represent whether each node is a query variable, evidence
 '''
 
 import Node
+import random
 #import numpy as np
 import sys
 
@@ -70,18 +71,48 @@ def assign_node_state(state_file_name,all_nodes):
     with open(state_file_name) as state_file:
         state_data = state_file.readlines()
         a = state_data[0].split(',')
+        list_of_nodes = []
         # print(a)
     sorted_node_name_list = sorted(all_nodes)
     for s in range(len(sorted_node_name_list)):
         all_nodes[sorted_node_name_list[s]].state = a[s]
-        print(all_nodes[sorted_node_name_list[s]].state)
+        list_of_nodes.append(all_nodes[sorted_node_name_list[s]])
+    return list_of_nodes
+
+#TODO compare the random list with the node's CPT Table
+'''
+We will do this by comparing the numbers with the respective CPT values in the nodes
+'''
+def sampling_comparisons(rand_list, node):
+    print(rand_list[2])
+    list_of_comparisons = []
+    for i in range(0, len(node)):
+        for j in range(0, len(node[i].CPT)):
+            print(j)
+            for k in node[j].CPT:
+                list_of_comparisons.append('t')
+    #             continue
+    #         else:
+    #             list_of_comparisons.append('f')
+    #             continue
+    #         pass
 
 
 
+def create_random(num_samples):
+    rand_list = []
+    for i in range(0, num_samples):
+        x = random.uniform(0,1)
+        x = round(x, 2)
+        rand_list.append(x)
+    return rand_list
 
 
+create_sample = create_random(10000)
 the_nodes = build_bayesian_network('network_option_b.txt')
-assign_node_state('query1.txt', the_nodes)
+assigned_nodes = assign_node_state('query1.txt', the_nodes)
+sampling_comparisons(create_sample, assigned_nodes)
+
 
 
     #
