@@ -15,9 +15,12 @@ import sys
 #     with open(input_file_name) as file:
 #         data = file.readlines()
 
-def InterpretFile(file):
+
+def build_bayesian_network(file_name):
+    with open(file_name) as file:
+        data = file.readlines()
     all_nodes = {}
-    for line in file:
+    for line in data:
         node_name,node_value=line.split(':')
 
         # parse the values
@@ -51,23 +54,34 @@ def InterpretFile(file):
                 this_node.parents.extend(all_nodes[this_node.name].parents)
                 this_node.children.extend(all_nodes[this_node.name].children)
             all_nodes[this_node.name] = this_node
+        # create all cpt
+        for v in cpt_values_list:
+            this_node.CPT.append(float(v))
 
-    sorted(all_nodes)
-    for n in all_nodes:
-        print(n)
-        for pp in all_nodes[n].parents:
-            print('   ',n,' child is: ',pp.name)
+    # for n in all_nodes:
+    #     # print(n)
+    #     for pp in all_nodes[n].parents:
+    #         # print('   ',n,' child is: ',pp.name)
 
-
-with open('network_option_b.txt') as file:
-    data = file.readlines()
-InterpretFile(data)
-
+    return all_nodes
 
 
+def assign_node_state(state_file_name,all_nodes):
+    with open(state_file_name) as state_file:
+        state_data = state_file.readlines()
+        a = state_data[0].split(',')
+        # print(a)
+    sorted_node_name_list = sorted(all_nodes)
+    for s in range(len(sorted_node_name_list)):
+        all_nodes[sorted_node_name_list[s]].state = a[s]
+        print(all_nodes[sorted_node_name_list[s]].state)
 
 
 
+
+
+the_nodes = build_bayesian_network('network_option_b.txt')
+assign_node_state('query1.txt', the_nodes)
 
 
     #

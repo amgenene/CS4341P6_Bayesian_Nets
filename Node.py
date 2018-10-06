@@ -5,5 +5,7 @@ class Node(object):
         self.name = name
         self.parents = []
         self.children = []
-        self.CPT = {}
+        self.CPT = []
+        self.status = None
+
 
