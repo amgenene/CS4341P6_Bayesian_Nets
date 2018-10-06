@@ -7,6 +7,7 @@ You will need a way to represent whether each node is a query variable, evidence
 
 import Node
 import random
+import math
 #import numpy as np
 import sys
 
@@ -75,7 +76,7 @@ def assign_node_state(state_file_name,all_nodes):
         # print(a)
     sorted_node_name_list = sorted(all_nodes)
     for s in range(len(sorted_node_name_list)):
-        all_nodes[sorted_node_name_list[s]].state = a[s]
+        all_nodes[sorted_node_name_list[s]].status = a[s]
         list_of_nodes.append(all_nodes[sorted_node_name_list[s]])
     return list_of_nodes
 
@@ -84,18 +85,57 @@ def assign_node_state(state_file_name,all_nodes):
 We will do this by comparing the numbers with the respective CPT values in the nodes
 '''
 def sampling_comparisons(rand_list, node):
-    print(rand_list[2])
     list_of_comparisons = []
-    for i in range(0, len(node)):
-        for j in range(0, len(node[i].CPT)):
-            print(j)
-            for k in node[j].CPT:
-                list_of_comparisons.append('t')
-    #             continue
-    #         else:
-    #             list_of_comparisons.append('f')
-    #             continue
-    #         pass
+    for i in rand_list:
+        for j in node:
+            for k in j.CPT:
+                if i <= k:
+                    list_of_comparisons.append('t')
+                else:
+                    list_of_comparisons.append('f')
+    return list_of_comparisons
+
+
+#TODO now compare the given list and the query list and return the normalized percent
+def rejection_sampling(list_compared, node):
+    true_index = []
+    false_index = []
+    counter = 0
+    true_satisfied = 0
+    false_satisfied = 0
+    query_satisfied = 0
+    possible_satisfied = []
+    distances_between_tru = []
+    distances_between_false = []
+    distances_between_tru_and_false = []
+    list_accepted_sample = []
+    for i in node:
+        if i.status == '?':
+            base_index = node.index(i)
+        if i.status == 't':
+            true_index.append(node.index(i))
+        if i.status == 'f':
+            false_index.append(node.index(i))
+    for a in true_index:
+        for b in false_index:
+            distances_between_tru_and_false.append(abs(a-b))
+    for c in range(0, len(true_index) - 1):
+        distances_between_tru.append(abs(true_index[c] - true_index[c+1]))
+    for d in range(0, len(false_index) - 1):
+        distances_between_false.append(abs(false_index[d] - false_index[d+1]))
+    for j in range(0, len(list_compared)):
+
+        for k in true_index:
+            if j % k == 0 and list_compared[j] == 't':
+                possible_satisfied.append(list_compared[j])
+        for l in false_index:
+            if j % l == 0 and list_compared[j] == 'f':
+                possible_satisfied.append((list_compared[j]))
+    print(len(list_compared))
+    print(len(possible_satisfied))
+
+    return list_accepted_sample
+    pass
 
 
 
@@ -111,7 +151,8 @@ def create_random(num_samples):
 create_sample = create_random(10000)
 the_nodes = build_bayesian_network('network_option_b.txt')
 assigned_nodes = assign_node_state('query1.txt', the_nodes)
-sampling_comparisons(create_sample, assigned_nodes)
+dem_samples = sampling_comparisons(create_sample, assigned_nodes)
+rejection_sampling(dem_samples, assigned_nodes)
 
 
 
