@@ -4,7 +4,7 @@ This structure(s) will need to represent the nodes, edges,
 and the conditional probability tables (CPTs) for each node.
 You will need a way to represent whether each node is a query variable, evidence variable, or unknown.
 '''
-
+import sys
 import Node
 import random
 import math
@@ -67,7 +67,7 @@ def build_bayesian_network(file_name):
 
     return all_nodes
 
-
+sys.setrecursionlimit(10000000)
 def assign_node_state(state_file_name,all_nodes):
     with open(state_file_name) as state_file:
         state_data = state_file.readlines()
@@ -96,10 +96,21 @@ def sampling_comparisons(rand_list, node):
     return list_of_comparisons
 
 
+def compare_node_status(node, index, current_8_status):
+    print(len(node) - 1)
+    if index > len(node) - 1:
+        return True
 
+    if node[index].status == 't' or node[index].status == 'f':
+        if node[index].status == current_8_status[index]:
+            index += 1
+            compare_node_status(node, index, current_8_status)
+        else:
+            return False
+    else:
+        compare_node_status(node, index, current_8_status)
 
 #TODO now compare the given list and the query list and return the normalized percent
-
 def rejection_sampling(list_compared, node):
     true_index = []
     false_index = []
@@ -119,14 +130,23 @@ def rejection_sampling(list_compared, node):
         for l in false_index:
             if j % l == 0 and list_compared[j] == 'f':
                 possible_satisfied.append((list_compared[j]))
+    print(base_index)
     after_query = []
     before_query = []
-    for d in possible_satisfied:
+    one_iteration = []
+    for d in range(0, len(possible_satisfied)):
+        a = possible_satisfied[d:d+7]
+        if compare_node_status(node, 0, a):
+            list_accepted_sample.append(d)
 
 
 
-    return list_accepted_sample
-    pass
+
+
+
+
+    #return list_accepted_sample
+        pass
 
 
 
