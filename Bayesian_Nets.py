@@ -96,14 +96,14 @@ def sampling_comparisons(rand_list, node):
     return list_of_comparisons
 
 
+
+
 #TODO now compare the given list and the query list and return the normalized percent
+
 def rejection_sampling(list_compared, node):
     true_index = []
     false_index = []
     possible_satisfied = []
-    distances_between_tru = []
-    distances_between_false = []
-    distances_between_tru_and_false = []
     list_accepted_sample = []
     for i in node:
         if i.status == '?':
@@ -112,13 +112,6 @@ def rejection_sampling(list_compared, node):
             true_index.append(node.index(i))
         if i.status == 'f':
             false_index.append(node.index(i))
-    for a in true_index:
-        for b in false_index:
-            distances_between_tru_and_false.append(abs(a-b))
-    for c in range(0, len(true_index) - 1):
-        distances_between_tru.append(abs(true_index[c] - true_index[c+1]))
-    for d in range(0, len(false_index) - 1):
-        distances_between_false.append(abs(false_index[d] - false_index[d+1]))
     for j in range(0, len(list_compared)):
         for k in true_index:
             if j % k == 0 and list_compared[j] == 't':
@@ -126,20 +119,8 @@ def rejection_sampling(list_compared, node):
         for l in false_index:
             if j % l == 0 and list_compared[j] == 'f':
                 possible_satisfied.append((list_compared[j]))
-    for d in possible_satisfied:
-        for e in range(0, len(node)):
-            if node[e].status == 't' and d == 'f':
-                continue
-            elif node[e].status == 'f' and d == 't':
-                continue
-            elif node[e].status == 'f' and d == 'f':
-                list_accepted_sample.append(d)
-            elif node[e].status == 't' and d == 't':
-                list_accepted_sample.append(d)
-            elif node[e].status == '-' or node[e].status == '?':
-                list_accepted_sample.append(d)
-    print(len(possible_satisfied))
-    print(len(list_accepted_sample))
+    for d in node
+    print(list_accepted_sample)
     return list_accepted_sample
     pass
 
