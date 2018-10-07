@@ -119,8 +119,12 @@ def rejection_sampling(list_compared, node):
         for l in false_index:
             if j % l == 0 and list_compared[j] == 'f':
                 possible_satisfied.append((list_compared[j]))
-    for d in node
-    print(list_accepted_sample)
+    after_query = []
+    before_query = []
+    for d in possible_satisfied:
+
+
+
     return list_accepted_sample
     pass
 
@@ -132,10 +136,11 @@ def create_random(num_samples):
         x = random.uniform(0,1)
         x = round(x, 2)
         rand_list.append(x)
+    print(len(rand_list))
     return rand_list
 
 
-create_sample = create_random(10000)
+create_sample = create_random(200)
 the_nodes = build_bayesian_network('network_option_b.txt')
 assigned_nodes = assign_node_state('query1.txt', the_nodes)
 dem_samples = sampling_comparisons(create_sample, assigned_nodes)
