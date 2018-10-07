@@ -77,7 +77,6 @@ def assign_node_state(state_file_name,all_nodes):
     sorted_node_name_list = sorted(all_nodes)
     for s in range(len(sorted_node_name_list)):
         all_nodes[sorted_node_name_list[s]].status = a[s]
-        all_nodes[sorted_node_name_list[s]].query_list.append(a)
         list_of_nodes.append(all_nodes[sorted_node_name_list[s]])
     return list_of_nodes
 
@@ -127,18 +126,20 @@ def rejection_sampling(list_compared, node):
         for l in false_index:
             if j % l == 0 and list_compared[j] == 'f':
                 possible_satisfied.append((list_compared[j]))
-    for d in range(0, len(possible_satisfied)):
-        for e in range(0, len(node[0].query_list)):
-            if node[0].query_list[e] == 't' and possible_satisfied[d] == 'f':
+    for d in possible_satisfied:
+        for e in range(0, len(node)):
+            if node[e].status == 't' and d == 'f':
                 continue
-            elif node[0].query_list[e] == 'f' and possible_satisfied[d] == 't':
+            elif node[e].status == 'f' and d == 't':
                 continue
-            elif node[0].query_list[e] == 'f' and possible_satisfied[d] == 'f':
-                list_accepted_sample.append(possible_satisfied[d])
-            elif node[0].query_list[e] == 't' and possible_satisfied[d] == 't':
-                list_accepted_sample.append(possible_satisfied[d])
-            elif node[0].query_list[e] == '-' or e == '?':
-                list_accepted_sample.append(possible_satisfied[d])
+            elif node[e].status == 'f' and d == 'f':
+                list_accepted_sample.append(d)
+            elif node[e].status == 't' and d == 't':
+                list_accepted_sample.append(d)
+            elif node[e].status == '-' or node[e].status == '?':
+                list_accepted_sample.append(d)
+    print(len(possible_satisfied))
+    print(len(list_accepted_sample))
     return list_accepted_sample
     pass
 
