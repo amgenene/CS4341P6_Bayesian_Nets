@@ -61,13 +61,13 @@ def build_bayesian_network(file_name):
             this_node.CPT.append(float(v))
 
     # for n in all_nodes:
-    #     # print(n)
+    #     print(n)
     #     for pp in all_nodes[n].parents:
-    #         # print('   ',n,' child is: ',pp.name)
+    #         print('   ',n,' child is: ',pp.name)
 
     return all_nodes
 
-sys.setrecursionlimit(10000000)
+#sys.setrecursionlimit(10000000)
 def assign_node_state(state_file_name,all_nodes):
     with open(state_file_name) as state_file:
         state_data = state_file.readlines()
@@ -97,25 +97,98 @@ def sampling_comparisons(rand_list, node):
 
 
 def compare_node_status(node, index, current_8_status):
-    print(len(node) - 1)
+    # print("len(node)", len(node), sep=": ", end="; ")
+    # print("index", index, sep=": ")
     if index > len(node) - 1:
+        print("All nodes checked, returning true, match found")
+        #print("Node: ", node[0].status, node[1].status, node[2].status, node[3].status, node[4].status, node[5].status, node[6].status, node[7].status, sep="   ")
+        #print("Curr:", current_8_status)
         return True
 
+    # print("Node status", node[index].status, sep=": ")
     if node[index].status == 't' or node[index].status == 'f':
+        # print("case 1 entered: node status t/f")
+
+        # If the node and the element in the array have the same status, check the next element in the array.
         if node[index].status == current_8_status[index]:
+            # print("Node status: ",
+            #       node[index].status,
+            #       "| Current status: ",
+            #       current_8_status[index],
+            #       "| Node matched, continuing validation of set")
             index += 1
-            compare_node_status(node, index, current_8_status)
+            return compare_node_status(node, index, current_8_status)
         else:
+            # print("Node status:",
+            #       node[index].status,
+            #       "| Current status:",
+            #       current_8_status[index],
+            #       "Node mismatch, returning false, continuing search with new set")
             return False
     else:
-        compare_node_status(node, index, current_8_status)
+        #print("case 2 entered: node status -/?")
+        index += 1
+        return compare_node_status(node, index, current_8_status)
+
+def calc_conditional_probability(node, parents):
+    index_of_CPT_array = 0
+    # print("Index of CPT array: ", index_of_CPT_array)
+    # Find the index of the CPT array that contains the correct conditional probability given the status of the parents
+    for parent_num in range(0, len(parents)):
+        # If the node has a true status, based on the evidence sample, add the binary value of that node to the index
+        # This will provide the correct 'row in the truth table' for the conditional probability
+        print(parents[parent_num].name, parents[parent_num].accepted, sep=" = ")
+        if parents[parent_num].accepted == 't':
+            # print("Accepted = t")
+            index_of_CPT_array += parent_num   # This may be the wrong index
+        # else:
+        #     print("Accepted = f")
+
+    # The conditional probability is equal to the value in the array
+    conditional_probability = node.CPT[index_of_CPT_array]
+    print("Conditional probability of node ", node.name, " given parents = ", conditional_probability)
+
+    return conditional_probability
+
+def calc_probability(query, nodes, evidence):
+    print("Node: ", nodes[query].name, "| Query: ", query)
+    print("Num parents: ", len(nodes[query].parents))
+    if nodes[query].parents:
+        # The conditional probability of the query node is based off its parents
+        conditional_probability_query = calc_conditional_probability(nodes[query], nodes[query].parents)
+        # For each parent of the query node, find its probability
+        for parent in nodes[query].parents:
+            probability = conditional_probability_query * calc_probability(query+1, nodes, evidence) # The first term (query+1) is likely wrong
+            print("Prob so far: ", probability)
+        return probability
+    else:
+        # print("Len CPT: ", len(nodes[query].CPT))
+        # print("Query: ", query)
+        if nodes[query].accepted == 't':
+            probability = nodes[query-1].CPT[0]
+        else:
+            probability = 1 - nodes[query-1].CPT[0]
+        return probability
+
+    # if query.parents:
+    #     # For each parent P of the query node, calculate the conditional probability of P given it's parents
+    #     for ParentNode in query.parents:
+    #         return calc_conditional_probability(ParentNode, evidence)
+    # else:
+    #     # If the query has no parents return the probability from the network option file given for its status
+    #     if evidence[element] == 't':
+    #         probability = query.CPT[0]
+    #     else:
+    #         probability = 1 - query.CPT[0]
 
 #TODO now compare the given list and the query list and return the normalized percent
+
 def rejection_sampling(list_compared, node):
     true_index = []
     false_index = []
     possible_satisfied = []
     list_accepted_sample = []
+
     for i in node:
         if i.status == '?':
             base_index = node.index(i)
@@ -123,6 +196,7 @@ def rejection_sampling(list_compared, node):
             true_index.append(node.index(i))
         if i.status == 'f':
             false_index.append(node.index(i))
+
     for j in range(0, len(list_compared)):
         for k in true_index:
             if j % k == 0 and list_compared[j] == 't':
@@ -130,23 +204,40 @@ def rejection_sampling(list_compared, node):
         for l in false_index:
             if j % l == 0 and list_compared[j] == 'f':
                 possible_satisfied.append((list_compared[j]))
-    print(base_index)
-    after_query = []
-    before_query = []
-    one_iteration = []
+
+    print("Base index: ", base_index)
+
+    # To find a series of accepted samples in the randomly generated sample set, loop through sets of 8 adjacent
+    # elements, starting with the first 8 elements. Compare the status of these elements to the required status of that
+    # node in the list of nodes in the network. This is specified by the query file.
+    # If the value for the node is t or f, the status of the element in the set of 8 array must match the node's status
+    # If the value for the node is -, the status of the element in the set of 8 array doesn't have to match the status
+    #    of the status of the node
+    # If the value for the node is ?, this is the query variable -> want to know probability of ? node given other nodes
     for d in range(0, len(possible_satisfied)):
-        a = possible_satisfied[d:d+7]
+        # a is the set of 8 elements from the set of randomly generated statuses that are being compared to the 8 node's
+        # statuses. It is a list of these statuses, statuses being true = 't' and false = 'f'
+        a = possible_satisfied[d:d+8]
+        # print(a)
+        # print(" *** Comparing new set of nodes *** ")
+        # Compare the statuses of the nodes in a to the nodes statuses as described in the query file. If the function
+        # finds a set of statuses that match, return true. Append the matching statues to the list of accepted samples
+        # and exit search. Otherwise return false and continue with a new set from the randomly generated set.
         if compare_node_status(node, 0, a):
-            list_accepted_sample.append(d)
+            # print("TRUE")
+            # print("d: ", d)
+            # Append the elements of a to the list of accepted elements
+            for element in range(0, len(a)):
+                list_accepted_sample.append(a[element])
+                node[element].accepted = a[element]
+            break
 
+    print("Sample statuses, match nodes: ", list_accepted_sample)
 
-
-
-
-
-
-    #return list_accepted_sample
-        pass
+    # Calculate the probability of node ? given evidence nodes E
+    # The node that is the query is in the base_index. Start calculating here, as this is the parent with no children
+    Probability = calc_probability(base_index, node, list_accepted_sample)
+    return Probability
 
 
 
@@ -156,16 +247,15 @@ def create_random(num_samples):
         x = random.uniform(0,1)
         x = round(x, 2)
         rand_list.append(x)
-    print(len(rand_list))
+    # print(len(rand_list))
     return rand_list
-
 
 create_sample = create_random(200)
 the_nodes = build_bayesian_network('network_option_b.txt')
 assigned_nodes = assign_node_state('query1.txt', the_nodes)
 dem_samples = sampling_comparisons(create_sample, assigned_nodes)
-rejection_sampling(dem_samples, assigned_nodes)
-
+Probability_rejection_sampling = rejection_sampling(dem_samples, assigned_nodes)
+print("Probability: ", Probability_rejection_sampling)
 
 
     #

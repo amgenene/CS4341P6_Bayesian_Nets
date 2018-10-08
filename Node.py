@@ -1,5 +1,3 @@
-
-
 class Node(object):
     def __init__(self,name):
         self.name = name
@@ -7,5 +5,4 @@ class Node(object):
         self.children = []
         self.CPT = []
         self.status = None
-
-
+        self.accepted = None
