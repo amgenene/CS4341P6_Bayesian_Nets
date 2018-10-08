@@ -8,7 +8,7 @@ import sys
 import Node
 import random
 import math
-#import numpy as np
+import numpy as np
 import sys
 
 
@@ -140,7 +140,9 @@ def calc_conditional_probability(node, parents):
         print(parents[parent_num].name, parents[parent_num].accepted, sep=" = ")
         if parents[parent_num].accepted == 't':
             # print("Accepted = t")
-            index_of_CPT_array += parent_num   # This may be the wrong index
+            index_increment = int(np.exp2(len(parents)-parent_num) / 2)
+            print("Index inc: ", index_increment)
+            index_of_CPT_array += index_increment   # This may be the wrong index
         # else:
         #     print("Accepted = f")
 
