@@ -56,16 +56,15 @@ def build_bayesian_network(file_name):
                 this_node.parents.extend(all_nodes[this_node.name].parents)
                 this_node.children.extend(all_nodes[this_node.name].children)
             all_nodes[this_node.name] = this_node
-
         # create all cpt
         for v in cpt_values_list:
-            this_node.CPT.append(float(v))
-        print(this_node.name, " CPT = ", this_node.CPT)
+            all_nodes[this_node.name].CPT.append(float(v))
 
-    #TODO For some reason the CPT values for the parentless nodes are not visible/non-existent after instatiation
-    # We need to fix this if we want the code to work and I can't figure this out
     for n in all_nodes:
-        print(all_nodes[n].name, " CPT = ", all_nodes[n].CPT)
+        print(n)
+        print('   ', ' p is: ', all_nodes[n].CPT)
+        for pp in all_nodes[n].parents:
+            print('   ',' p is: ',pp.name)
 
     return all_nodes
 
@@ -86,6 +85,17 @@ def assign_node_state(state_file_name,all_nodes):
 '''
 We will do this by comparing the numbers with the respective CPT values in the nodes
 '''
+def sampling_comparisons(rand_list, node):
+    list_of_comparisons = []
+    for i in rand_list:
+        for j in node:
+            for k in j.CPT:
+                if i <= k:
+                    list_of_comparisons.append('t')
+                else:
+                    list_of_comparisons.append('f')
+    return list_of_comparisons
+
 
 def compare_node_status(node, index, current_8_status):
     # print("len(node)", len(node), sep=": ", end="; ")
@@ -125,7 +135,7 @@ def calc_conditional_probability(node, parents):
     index_of_CPT_array = 0
     # print("Index of CPT array: ", index_of_CPT_array)
     # Find the index of the CPT array that contains the correct conditional probability given the status of the parents
-    for parent_num in range(len(parents)):
+    for parent_num in range(0, len(parents)):
         # If the node has a true status, based on the evidence sample, add the binary value of that node to the index
         # This will provide the correct 'row in the truth table' for the conditional probability
         print(parents[parent_num].name, parents[parent_num].accepted, sep=" = ")
@@ -133,7 +143,7 @@ def calc_conditional_probability(node, parents):
             # print("Accepted = t")
             index_increment = int(np.exp2(len(parents)-parent_num) / 2)
             print("Index inc: ", index_increment)
-            index_of_CPT_array += index_increment
+            index_of_CPT_array += index_increment   # This may be the wrong index
         # else:
         #     print("Accepted = f")
 
@@ -150,19 +160,17 @@ def calc_probability(query, nodes, evidence):
         # The conditional probability of the query node is based off its parents
         conditional_probability_query = calc_conditional_probability(nodes[query], nodes[query].parents)
         # For each parent of the query node, find its probability
-        for parent in range(len(nodes[query].parents)):
-            probability = conditional_probability_query * calc_probability(parent, nodes[query].parents, evidence) # The first term (query+1) is likely wrong
+        for parent in nodes[query].parents:
+            probability = conditional_probability_query * calc_probability(query+1, nodes, evidence) # The first term (query+1) is likely wrong
             print("Prob so far: ", probability)
         return probability
     else:
-        print("calc_prob no parents")
-        print("Len CPT: ", len(nodes[query].CPT))
-        print("Query: ", query)
-        print("Query cpt: ", nodes[query].name)
+        # print("Len CPT: ", len(nodes[query].CPT))
+        # print("Query: ", query)
         if nodes[query].accepted == 't':
-            probability = nodes[query].CPT[0]
+            probability = nodes[query-1].CPT[0]
         else:
-            probability = 1 - nodes[query].CPT[0]
+            probability = 1 - nodes[query-1].CPT[0]
         return probability
 
     # if query.parents:
@@ -192,7 +200,7 @@ def rejection_sampling(list_compared, node):
         if i.status == 'f':
             false_index.append(node.index(i))
 
-    for j in range(len(list_compared)):
+    for j in range(0, len(list_compared)):
         for k in true_index:
             if j % k == 0 and list_compared[j] == 't':
                 possible_satisfied.append(list_compared[j])
@@ -248,8 +256,8 @@ def create_random(num_samples):
 create_sample = create_random(200)
 the_nodes = build_bayesian_network('network_option_b.txt')
 assigned_nodes = assign_node_state('query1.txt', the_nodes)
-#dem_samples = sampling_comparisons(create_sample, assigned_nodes)
-Probability_rejection_sampling = rejection_sampling(create_sample, assigned_nodes)
+dem_samples = sampling_comparisons(create_sample, assigned_nodes)
+Probability_rejection_sampling = rejection_sampling(dem_samples, assigned_nodes)
 print("Probability: ", Probability_rejection_sampling)
 
 
