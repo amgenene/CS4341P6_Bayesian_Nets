@@ -58,12 +58,13 @@ def build_bayesian_network(file_name):
             all_nodes[this_node.name] = this_node
         # create all cpt
         for v in cpt_values_list:
-            this_node.CPT.append(float(v))
+            all_nodes[this_node.name].CPT.append(float(v))
 
-    # for n in all_nodes:
-    #     print(n)
-    #     for pp in all_nodes[n].parents:
-    #         print('   ',n,' child is: ',pp.name)
+    for n in all_nodes:
+        print(n)
+        print('   ', ' p is: ', all_nodes[n].CPT)
+        for pp in all_nodes[n].parents:
+            print('   ',' p is: ',pp.name)
 
     return all_nodes
 
