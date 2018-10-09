@@ -60,11 +60,11 @@ def build_bayesian_network(file_name):
         for v in cpt_values_list:
             all_nodes[this_node.name].CPT.append(float(v))
 
-    for n in all_nodes:
-        print(n)
-        print('   ', ' p is: ', all_nodes[n].CPT)
-        for pp in all_nodes[n].parents:
-            print('   ',' p is: ',pp.name)
+    # for n in all_nodes:
+    #     print(n)
+    #     print('   ', ' p is: ', all_nodes[n].CPT)
+    #     for pp in all_nodes[n].parents:
+    #         print('   ',' p is: ',pp.name)
 
     return all_nodes
 
@@ -132,57 +132,54 @@ def compare_node_status(node, index, current_8_status):
         return compare_node_status(node, index, current_8_status)
 
 def calc_conditional_probability(node, parents):
+    # Initially, the index of the CPT array is zero, representing the first element in the array. This must be modified
+    # by the states of the nodes to determine the correct element in the array
     index_of_CPT_array = 0
-    # print("Index of CPT array: ", index_of_CPT_array)
+
     # Find the index of the CPT array that contains the correct conditional probability given the status of the parents
     for parent_num in range(0, len(parents)):
         # If the node has a true status, based on the evidence sample, add the binary value of that node to the index
-        # This will provide the correct 'row in the truth table' for the conditional probability
-        print(parents[parent_num].name, parents[parent_num].accepted, sep=" = ")
+        # This will provide the correct 'row in the truth table' for the conditional probability. If the status of the
+        # node is false, this is like a zero in the truth table so its value is not added to the index variable.
         if parents[parent_num].accepted == 't':
-            # print("Accepted = t")
+            # The index increment is equal to the "binary value" the node has in the truth table. The array of parents
+            # is read in like the values of a truth table, so each element in the array should have a value equal to
+            # 2^(n-index), where n is the length of the array and index is the nodes index in the array. This is then
+            # divided by two because binary is a base two system.
             index_increment = int(np.exp2(len(parents)-parent_num) / 2)
-            print("Index inc: ", index_increment)
-            index_of_CPT_array += index_increment   # This may be the wrong index
-        # else:
-        #     print("Accepted = f")
 
-    # The conditional probability is equal to the value in the array
+            # The correct place in the array is the sum of the true nodes values
+            index_of_CPT_array += index_increment
+
+    # The conditional probability is equal to the value in the array at the correct location, according to the state of
+    # the parent nodes. Having found this index above, it is now trivial to retrieve the value.
     conditional_probability = node.CPT[index_of_CPT_array]
-    print("Conditional probability of node ", node.name, " given parents = ", conditional_probability)
-
     return conditional_probability
 
 def calc_probability(query, nodes, evidence):
-    print("Node: ", nodes[query].name, "| Query: ", query)
-    print("Num parents: ", len(nodes[query].parents))
+    # If the query node has parents, find the conditional probability of the query node given the parent states
     if nodes[query].parents:
-        # The conditional probability of the query node is based off its parents
+        # Find the conditional probability of the query node based off its parents and the CPTable
         conditional_probability_query = calc_conditional_probability(nodes[query], nodes[query].parents)
-        # For each parent of the query node, find its probability
-        for parent in nodes[query].parents:
-            probability = conditional_probability_query * calc_probability(query+1, nodes, evidence) # The first term (query+1) is likely wrong
-            print("Prob so far: ", probability)
-        return probability
-    else:
-        # print("Len CPT: ", len(nodes[query].CPT))
-        # print("Query: ", query)
-        if nodes[query].accepted == 't':
-            probability = nodes[query-1].CPT[0]
-        else:
-            probability = 1 - nodes[query-1].CPT[0]
+
+        # Probability initially equals conditional probability of query node from above
+        probability = conditional_probability_query
+
+        # For each parent of the query node, find its probability and multiply it in to the total probability
+        for parent in range(len(nodes[query].parents)):
+            # This is a recursive call to the calc_probability function to find the probability of all parents of query
+            probability *= calc_probability(parent, nodes[query].parents, evidence)
         return probability
 
-    # if query.parents:
-    #     # For each parent P of the query node, calculate the conditional probability of P given it's parents
-    #     for ParentNode in query.parents:
-    #         return calc_conditional_probability(ParentNode, evidence)
-    # else:
-    #     # If the query has no parents return the probability from the network option file given for its status
-    #     if evidence[element] == 't':
-    #         probability = query.CPT[0]
-    #     else:
-    #         probability = 1 - query.CPT[0]
+    # If the query node does not have parents, find its probability given its state
+    else:
+        # If the node is true, the probability is given in the CPTable
+        if nodes[query].accepted == 't':
+            probability = nodes[query].CPT[0]
+        # If the node is false, the probability is 1 - the value in the CPTable
+        else:
+            probability = 1 - nodes[query].CPT[0]
+        return probability
 
 #TODO now compare the given list and the query list and return the normalized percent
 
