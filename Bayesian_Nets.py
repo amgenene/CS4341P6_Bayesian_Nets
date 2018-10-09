@@ -98,36 +98,23 @@ def sampling_comparisons(rand_list, node):
 
 
 def compare_node_status(node, index, current_8_status):
-    # print("len(node)", len(node), sep=": ", end="; ")
-    # print("index", index, sep=": ")
+    # If the search index is greater than the amount of nodes, all nodes have been searched and returned true, meaning
+    # a match has been found.
     if index > len(node) - 1:
-        print("All nodes checked, returning true, match found")
-        #print("Node: ", node[0].status, node[1].status, node[2].status, node[3].status, node[4].status, node[5].status, node[6].status, node[7].status, sep="   ")
-        #print("Curr:", current_8_status)
         return True
 
-    # print("Node status", node[index].status, sep=": ")
+    # If the node being checked has a status of true or false, check that the node and the element have the same status
     if node[index].status == 't' or node[index].status == 'f':
-        # print("case 1 entered: node status t/f")
-
         # If the node and the element in the array have the same status, check the next element in the array.
         if node[index].status == current_8_status[index]:
-            # print("Node status: ",
-            #       node[index].status,
-            #       "| Current status: ",
-            #       current_8_status[index],
-            #       "| Node matched, continuing validation of set")
             index += 1
             return compare_node_status(node, index, current_8_status)
+        # If there is a mismatch, end the search and restart with a new set
         else:
-            # print("Node status:",
-            #       node[index].status,
-            #       "| Current status:",
-            #       current_8_status[index],
-            #       "Node mismatch, returning false, continuing search with new set")
             return False
+    # If the node is not true or false, the status of the node is not important and the search can continue with the
+    # next node
     else:
-        #print("case 2 entered: node status -/?")
         index += 1
         return compare_node_status(node, index, current_8_status)
 
@@ -205,8 +192,6 @@ def rejection_sampling(list_compared, node):
             if j % l == 0 and list_compared[j] == 'f':
                 possible_satisfied.append((list_compared[j]))
 
-    print("Base index: ", base_index)
-
     # To find a series of accepted samples in the randomly generated sample set, loop through sets of 8 adjacent
     # elements, starting with the first 8 elements. Compare the status of these elements to the required status of that
     # node in the list of nodes in the network. This is specified by the query file.
@@ -218,25 +203,22 @@ def rejection_sampling(list_compared, node):
         # a is the set of 8 elements from the set of randomly generated statuses that are being compared to the 8 node's
         # statuses. It is a list of these statuses, statuses being true = 't' and false = 'f'
         a = possible_satisfied[d:d+8]
-        # print(a)
-        # print(" *** Comparing new set of nodes *** ")
+
         # Compare the statuses of the nodes in a to the nodes statuses as described in the query file. If the function
         # finds a set of statuses that match, return true. Append the matching statues to the list of accepted samples
         # and exit search. Otherwise return false and continue with a new set from the randomly generated set.
         if compare_node_status(node, 0, a):
-            # print("TRUE")
-            # print("d: ", d)
-            # Append the elements of a to the list of accepted elements
+            # Append the elements of a to the list of accepted elements and set the accepted value of each node to the
+            # status of the accepted elements
             for element in range(0, len(a)):
                 list_accepted_sample.append(a[element])
                 node[element].accepted = a[element]
             break
 
-    print("Sample statuses, match nodes: ", list_accepted_sample)
-
     # Calculate the probability of node ? given evidence nodes E
     # The node that is the query is in the base_index. Start calculating here, as this is the parent with no children
     Probability = calc_probability(base_index, node, list_accepted_sample)
+
     return Probability
 
 
