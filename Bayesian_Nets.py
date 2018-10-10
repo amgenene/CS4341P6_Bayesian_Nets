@@ -337,15 +337,53 @@ if __name__ == "__main__":
     input_file_name = sys.argv[1]
     input_query_file = sys.argv[2]
     sample_number = int(sys.argv[3])
-    create_sample = create_random_list(sample_number)
-    the_nodes = build_bayesian_network(input_file_name)
-    assigned_nodes = assign_node_state(input_query_file, the_nodes)
-    dem_samples = sampling_comparisons(create_sample, assigned_nodes)
-    query_probability = likelihood_weighting(the_nodes,sample_number)
-    print("Probability of query by likelihood weighting: ", query_probability)
 
-    Probability_rejection_sampling = run_reject_sampling(sample_number, assigned_nodes)
-    print("Probability of query by rejection sample: ", Probability_rejection_sampling)
+    # Variables to store the outputs of the two different methods
+    rejection_total = 0
+    rejection_set = []
+    likelihood_total = 0
+    likelihood_set = []
+
+
+    # The initialized counter for the number of trials to be conducted
+    trial = 0
+    num_trials = 10
+    while trial < num_trials:
+        print("Trial ", trial)
+        create_sample = create_random_list(sample_number)
+        the_nodes = build_bayesian_network(input_file_name)
+        assigned_nodes = assign_node_state(input_query_file, the_nodes)
+        dem_samples = sampling_comparisons(create_sample, assigned_nodes)
+        query_probability = likelihood_weighting(the_nodes,sample_number)
+        print("Probability of query by likelihood weighting: ", query_probability)
+        likelihood_total += query_probability
+        likelihood_set.append(query_probability)
+
+        Probability_rejection_sampling = run_reject_sampling(sample_number, assigned_nodes)
+        print("Probability of query by rejection sample: ", Probability_rejection_sampling)
+        rejection_total += Probability_rejection_sampling
+        rejection_set.append(Probability_rejection_sampling)
+
+        trial+=1
+
+    # Find mean of both methods
+    mean_rejection_set = rejection_total/num_trials
+    print("Mean rejection sampling: ", mean_rejection_set)
+    mean_likelihood_set = likelihood_total/num_trials
+    print("Mean likelihood weighting: ", mean_likelihood_set)
+
+    # Find variance of both methods
+    sum = 0
+    for term in range(len(rejection_set)):
+        sum += math.pow((rejection_set[term] - mean_rejection_set), 2)
+    variance_rejection_set = sum / (num_trials - 1)
+    print("Variance rejection sampling: ", variance_rejection_set)
+    sum = 0
+    for term in range(len(likelihood_set)):
+        sum += math.pow((likelihood_set[term] - mean_likelihood_set), 2)
+    variance_likelihood_set = sum / (num_trials - 1)
+    print("Variance likelihood sampling: ", variance_likelihood_set)
+
 
 
 
