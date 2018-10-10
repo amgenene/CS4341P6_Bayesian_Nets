@@ -6,3 +6,4 @@ class Node(object):
         self.CPT = []
         self.status = None
         self.accepted = None
+        self.temporal_status = None

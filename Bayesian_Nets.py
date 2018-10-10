@@ -12,12 +12,6 @@ import numpy as np
 import sys
 
 
-# if __name__ == "__main__":
-#     input_file_name = sys.argv[1]
-#     with open(input_file_name) as file:
-#         data = file.readlines()
-
-
 def build_bayesian_network(file_name):
     with open(file_name) as file:
         data = file.readlines()
@@ -223,7 +217,7 @@ def rejection_sampling(list_compared, node):
 
 
 
-def create_random(num_samples):
+def create_random_list(num_samples):
     rand_list = []
     for i in range(0, num_samples):
         x = random.uniform(0,1)
@@ -232,36 +226,108 @@ def create_random(num_samples):
     # print(len(rand_list))
     return rand_list
 
-create_sample = create_random(200)
+def create_random_prob():
+    x = random.uniform(0,1)
+    x = round(x, 2)
+    return x
+
+
+def random_sample_weight(all_nodes,current_key,current_weight):
+    cpt_index = 0
+    power_counter = 0
+    for parent in all_nodes[current_key].parents:
+        if parent.temporal_status:
+            cpt_index += (2 ** power_counter)
+        power_counter += 1
+
+    rand = create_random_prob()
+    if rand < all_nodes[current_key].CPT[cpt_index]:
+        current_weight = current_weight * all_nodes[current_key].CPT[cpt_index]
+        all_nodes[current_key].temporal_status = True
+    else:
+        current_weight = current_weight * (1-all_nodes[current_key].CPT[cpt_index])
+        all_nodes[current_key].temporal_status = False
+    return current_weight
+
+
+def evidence_sample_weight(all_nodes,current_key,current_weight):
+    cpt_index = 0
+    power_counter = 0
+    for parent in all_nodes[current_key].parents:
+        if parent.temporal_status:
+            cpt_index += (2 ** power_counter)
+        power_counter += 1
+
+    if all_nodes[current_key].status == 't':
+        current_weight = current_weight * all_nodes[current_key].CPT[cpt_index]
+        all_nodes[current_key].temporal_status = True
+    elif all_nodes[current_key].status == 'f':
+        current_weight = current_weight * (1-all_nodes[current_key].CPT[cpt_index])
+        all_nodes[current_key].temporal_status = False
+    return current_weight
+
+
+def update_weight(all_nodes,current_key,current_weight):
+    if not all_nodes[current_key].parents:
+        if (all_nodes[current_key].status == 't') or (all_nodes[current_key].status == 'f'):
+            current_weight = evidence_sample_weight(all_nodes,current_key,current_weight)
+        else:
+            current_weight = random_sample_weight(all_nodes,current_key,current_weight)
+        return current_weight
+    else:
+        for parent in all_nodes[current_key].parents:
+            if not parent.temporal_status:
+                current_weight = update_weight(all_nodes,parent.name,current_weight)
+
+        if (all_nodes[current_key].status == 't') or (all_nodes[current_key].status == 'f'):
+            current_weight = evidence_sample_weight(all_nodes,current_key,current_weight)
+        else:
+            current_weight = random_sample_weight(all_nodes,current_key,current_weight)
+        return current_weight
+
+
+def likelihood_weighting(all_nodes,number_of_samples):
+    total_weight = 0
+    query_true_weight = 0
+    for key in all_nodes:
+        if all_nodes[key].status == '?':
+            current_key = key
+    for i in range(number_of_samples):
+        for key in all_nodes:
+            all_nodes[key].temporal_status = None
+        current_weight = update_weight(all_nodes,current_key,1)
+        # update total weight
+        total_weight += current_weight
+        # update weight where query variable is true
+        if all_nodes[current_key].temporal_status:
+            query_true_weight += current_weight
+    return query_true_weight/total_weight
+
+
+
+
+create_sample = create_random_list(200)
 the_nodes = build_bayesian_network('network_option_b.txt')
 assigned_nodes = assign_node_state('query1.txt', the_nodes)
 dem_samples = sampling_comparisons(create_sample, assigned_nodes)
-Probability_rejection_sampling = rejection_sampling(dem_samples, assigned_nodes)
-print("Probability: ", Probability_rejection_sampling)
+query_probability = likelihood_weighting(the_nodes,100)
+print(query_probability)
+#Probability_rejection_sampling = rejection_sampling(dem_samples, assigned_nodes)
+#print("Probability: ", Probability_rejection_sampling)
 
 
-    #
-    #
-    #
-    # out_file = open(sys.argv[2],'w')
-    #
-    # # if result:
-    # #     for a in param.list_of_bags:
-    # #         line = [a.name+' ']
-    # #         for b in a.contains:
-    # #             line.append(b.name)
-    # #             line.append(' ')
-    # #         out_file.write(''.join(line))
-    # #         out_file.write('\n')
-    # #         num_of_items = 'number of items: ' + str(len(a.contains)) + '\n'
-    # #         out_file.write(num_of_items)
-    # #         total_weight_capacity = 'total weight: '+str(a.current_load)+' '+'total capacity: '+str(a.capacity)+'\n'
-    # #         out_file.write(total_weight_capacity)
-    # #         wasted = 'wasted capacity: ' + str(a.capacity - a.current_load)+'\n'
-    # #         out_file.write(wasted)
-    # #         out_file.write('\n')
-    # # else:
-    # #     out_file.write('No solution found')
-    # #
-    # #
-    # #
+if __name__ == "__main__":
+    input_file_name = sys.argv[1]
+    input_query_file = sys.argv[2]
+    sample_number = int(sys.argv[3])
+    create_sample = create_random_list(sample_number)
+    the_nodes = build_bayesian_network(input_file_name)
+    assigned_nodes = assign_node_state(input_query_file, the_nodes)
+    dem_samples = sampling_comparisons(create_sample, assigned_nodes)
+    query_probability = likelihood_weighting(the_nodes,sample_number)
+    print("Probability of query by likelihood weighting: ", query_probability)
+    Probability_rejection_sampling = rejection_sampling(dem_samples, assigned_nodes)
+    print("Probability of query by rejection sample: ", Probability_rejection_sampling)
+
+
+
