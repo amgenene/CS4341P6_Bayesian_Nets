@@ -216,7 +216,7 @@ def rejection_sampling(list_compared, node):
     return Probability
 
 
-
+#create random number list
 def create_random_list(num_samples):
     rand_list = []
     for i in range(0, num_samples):
@@ -226,12 +226,38 @@ def create_random_list(num_samples):
     # print(len(rand_list))
     return rand_list
 
+# run_reject_sampling
+def run_reject_sampling(sample_number,assigned_nodes):
+
+    total_sample = 0
+    query_true_sample = 0
+    for key in the_nodes:
+        if the_nodes[key].status == '?':
+            current_key = key
+    for i in range(sample_number):
+        for key in the_nodes:
+            the_nodes[key].accepted = None
+        create_sample = create_random_list(sample_number)
+        dem_samples = sampling_comparisons(create_sample, assigned_nodes)
+        Probability = rejection_sampling(dem_samples, assigned_nodes)
+        # update total sample number
+        if Probability:
+            total_sample += 1
+        # update weight where query variable is true
+        if the_nodes[current_key].accepted == 't':
+            query_true_sample += 1.5
+    Probability_rejection_sampling = query_true_sample / sample_number
+    return Probability_rejection_sampling
+
+
+# create a random probability
 def create_random_prob():
     x = random.uniform(0,1)
     x = round(x, 2)
     return x
 
 
+# update weight of a non evidence variable
 def random_sample_weight(all_nodes,current_key,current_weight):
     cpt_index = 0
     power_counter = 0
@@ -250,6 +276,7 @@ def random_sample_weight(all_nodes,current_key,current_weight):
     return current_weight
 
 
+# update weight of a evidence variable
 def evidence_sample_weight(all_nodes,current_key,current_weight):
     cpt_index = 0
     power_counter = 0
@@ -267,6 +294,7 @@ def evidence_sample_weight(all_nodes,current_key,current_weight):
     return current_weight
 
 
+# update weight of all variable
 def update_weight(all_nodes,current_key,current_weight):
     if not all_nodes[current_key].parents:
         if (all_nodes[current_key].status == 't') or (all_nodes[current_key].status == 'f'):
@@ -286,6 +314,7 @@ def update_weight(all_nodes,current_key,current_weight):
         return current_weight
 
 
+# run likelihood
 def likelihood_weighting(all_nodes,number_of_samples):
     total_weight = 0
     query_true_weight = 0
@@ -304,18 +333,6 @@ def likelihood_weighting(all_nodes,number_of_samples):
     return query_true_weight/total_weight
 
 
-
-
-create_sample = create_random_list(200)
-the_nodes = build_bayesian_network('network_option_b.txt')
-assigned_nodes = assign_node_state('query1.txt', the_nodes)
-dem_samples = sampling_comparisons(create_sample, assigned_nodes)
-query_probability = likelihood_weighting(the_nodes,100)
-print(query_probability)
-#Probability_rejection_sampling = rejection_sampling(dem_samples, assigned_nodes)
-#print("Probability: ", Probability_rejection_sampling)
-
-
 if __name__ == "__main__":
     input_file_name = sys.argv[1]
     input_query_file = sys.argv[2]
@@ -326,7 +343,8 @@ if __name__ == "__main__":
     dem_samples = sampling_comparisons(create_sample, assigned_nodes)
     query_probability = likelihood_weighting(the_nodes,sample_number)
     print("Probability of query by likelihood weighting: ", query_probability)
-    Probability_rejection_sampling = rejection_sampling(dem_samples, assigned_nodes)
+
+    Probability_rejection_sampling = run_reject_sampling(sample_number, assigned_nodes)
     print("Probability of query by rejection sample: ", Probability_rejection_sampling)
 
 
